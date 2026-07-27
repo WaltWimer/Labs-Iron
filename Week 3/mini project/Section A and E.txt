@@ -63,46 +63,20 @@ Negative effects of indexes: Indexes slow down write performance (INSERT, UPDATE
 
 
 -----------------------
+Section E - Performance Engineering Case Study
 
-SECTION E: Performance Engineering Case Study (Architecture & Optimization)
-Part 1 - Scalable Architecture Design:
+Part 1 - Architecture Design
+To handle 5 million daily orders and 50 million clickstream events, we need to separate our operational and analytical workloads. I propose using PostgreSQL as our main OLTP database to manage the high-speed transactions safely. 
+For the massive volume of raw clickstream events, we'll dump them into a Data Lake (like AWS S3) to keep storage costs down. 
 
-Database: PostgreSQL (OLTP for transactional data).
+From there, we will load the data into a modern cloud warehouse (Snowflake or BigQuery) where we can run heavy analytical queries without slowing down the operational database. We'll tie all this together using Apache Airflow to orchestrate 
+the pipelines, and use dbt (Data Build Tool) to handle SQL transformations directly inside the warehouse.
 
-Data Lake: Cloud Object Storage (Parquet format for raw clickstream logs).
+Part 2 - Optimization
+To fix the slow queries and 3-hour dashboard timeouts, we need to optimize how data is stored and read. First, we will partition the transactional tables by date (order_date or event_timestamp) so the query engine automatically skips irrelevant historical data. 
+We should also index foreign keys (like customer_id and product_id) to speed up our JOIN operations. To cut down storage costs in the Data Lake, all historical data should be compressed into Parquet format.
 
-Warehouse: Cloud Data Warehouse (Snowflake / BigQuery) for analytical modeling (Star Schema).
+For the dashboards specifically, the columnar storage of our data warehouse will help immensely since it only reads the specific columns needed for the metrics, reducing disk I/O. To further speed up refresh times, we will use materialized views to pre-compute heavy aggregations, and implement incremental loading so we only process new daily records (deltas) instead of reloading everything from scratch.
 
-Orchestration: Apache Airflow (for scheduling pipelines).
-
-Transformation Layer: Python / Pandas / dbt (data transformation inside the warehouse).
-
-Part 2 - Optimization Strategies:
-
-Partitioning: Date-based partitioning on orders and clickstream tables.
-
-Indexing: B-Tree indexes on primary and foreign keys.
-
-Compression: Use Snappy compression via Parquet format.
-
-Query Optimization: Avoid SELECT *, push predicates down, and leverage materialized views for pre-aggregated dashboard metrics.
-
-Incremental Loading: Load only daily deltas instead of full table reloads.
-
-
-
-Part 3 - Reliability:
-
-Retry handling: Implement idempotent pipeline tasks combined with automated retries and exponential backoff (e.g., in Apache Airflow). This ensures that if a task fails due to a transient network timeout or database lock, it can re-run safely without causing duplicate data or corrupting downstream tables.
-
-
-
-Failure alerts: Configure automated notification channels (such as email alerts or webhook integrations to Slack/PagerDuty) triggered immediately upon pipeline or task failure, allowing data operations teams to respond and resolve incidents quickly.
-
-
-
-Data quality validation: Integrate automated validation checkpoints (using tools like Great Expectations or custom Pandas schema assertions) during the ingestion and staging phases. This catches missing values, duplicate primary keys, and schema drift early, preventing corrupted or malformed data from reaching the data warehouse and breaking dashboards.
-
-
-
-
+Part 3 - Reliability
+To stop the pipelines from failing silently, we need a robust error-handling strategy. In Airflow, we will configure retry parameters and delays to automatically recover from temporary API or network drops. If a task permanently fails, we will set up email_on_failure alerts so the team is notified immediately. Finally, before loading anything into the staging tables, we will run data quality validations to catch nulls in critical fields and drop duplicate records, preventing bad data from breaking downstream processes.
