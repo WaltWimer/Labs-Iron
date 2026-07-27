@@ -1,0 +1,108 @@
+SECTION A: Data Engineering Theory 
+
+Q1. OLTP vs OLAP Architecture
+
+Performance issues: Storing transactional and analytical workloads in the same database causes resource contention. Heavy analytical queries lock tables or consume CPU/RAM, slowing down daily transactional operations (OLTP) like order placements.
+
+Comparison: OLTP (Online Transaction Processing) is optimized for fast, row-level inserts/updates (high concurrency, normalized schema). OLAP (Online Analytical Processing) is optimized for complex aggregations, scans, and heavy reads across millions of historical rows (denormalized schema).
+
+Improved architecture: Decouple operational data from analytical data using a modern ELT pipeline.
+
+Where to use:
+
+PostgreSQL/MySQL: OLTP workloads (application backend, user management, order intake).
+
+Data Warehouse (Snowflake, BigQuery, Redshift): OLAP workloads (dashboards, business intelligence, revenue metrics).
+
+Data Lake ( databriks , amazon lake): Raw storage for unstructured or semi-structured data like clickstream logs.
+
+Q2. ACID vs BASE in Distributed Systems
+
+BASE preferred for clickstream: Clickstream generates millions of high-velocity events daily. BASE (Basically Available, Soft state, Eventual consistency) prioritizes high write availability and throughput over strict immediate consistency, preventing pipeline bottlenecks.
+
+ACID compliance workloads: Financial transactions, inventory stock deduction, and user authentication require ACID (Atomicity, Consistency, Isolation, Durability) to prevent data corruption.
+
+Eventual consistency examples: Social media likes counters, recommendation engines, and website page-view click logs.
+
+Q3. Storage Formats & Querying
+
+Comparison:
+
+CSV: Plain text, row-oriented, no built-in schema or compression.
+
+JSON: Semi-structured, nested, text-based, verbose.
+
+Avro: Row-oriented binary format with embedded schema, great for streaming.
+
+Parquet: Columnar binary format, highly compressed, optimized for analytical queries.
+
+Why columnar storage: Analytical queries typically aggregate specific columns. Columnar storage reads only the required columns from disk, dramatically reducing I/O.
+
+Avro vs JSON: Both handle schema/semi-structured data, but Avro is stored in compact binary format with schema metadata included, making it faster and smaller than text-based JSON.
+
+Parquet compression benefits: Columnar layout allows similar data types to sit together, making compression algorithms (like Snappy or Gzip) extremely efficient, lowering storage costs.
+
+Q4. Partitioning & Indexing
+
+Partitioning strategy:
+
+Orders: Partition by order_date (monthly or daily) to prune scans for historical queries.
+
+Clickstream: Partition by event_timestamp (date) and device_type.
+
+Indexing strategy:
+
+Customer lookups: B-Tree index on customer_id and email.
+
+Order filtering: Index on order_date and payment_status.
+
+Joins: Indexes on foreign keys (customer_id, product_id).
+
+Negative effects of indexes: Indexes slow down write performance (INSERT, UPDATE, DELETE) because every write requires updating the index tree, and they consume extra storage.
+
+
+
+-----------------------
+
+SECTION E: Performance Engineering Case Study (Architecture & Optimization)
+Part 1 - Scalable Architecture Design:
+
+Database: PostgreSQL (OLTP for transactional data).
+
+Data Lake: Cloud Object Storage (Parquet format for raw clickstream logs).
+
+Warehouse: Cloud Data Warehouse (Snowflake / BigQuery) for analytical modeling (Star Schema).
+
+Orchestration: Apache Airflow (for scheduling pipelines).
+
+Transformation Layer: Python / Pandas / dbt (data transformation inside the warehouse).
+
+Part 2 - Optimization Strategies:
+
+Partitioning: Date-based partitioning on orders and clickstream tables.
+
+Indexing: B-Tree indexes on primary and foreign keys.
+
+Compression: Use Snappy compression via Parquet format.
+
+Query Optimization: Avoid SELECT *, push predicates down, and leverage materialized views for pre-aggregated dashboard metrics.
+
+Incremental Loading: Load only daily deltas instead of full table reloads.
+
+
+
+Part 3 - Reliability:
+
+Retry handling: Implement idempotent pipeline tasks combined with automated retries and exponential backoff (e.g., in Apache Airflow). This ensures that if a task fails due to a transient network timeout or database lock, it can re-run safely without causing duplicate data or corrupting downstream tables.
+
+
+
+Failure alerts: Configure automated notification channels (such as email alerts or webhook integrations to Slack/PagerDuty) triggered immediately upon pipeline or task failure, allowing data operations teams to respond and resolve incidents quickly.
+
+
+
+Data quality validation: Integrate automated validation checkpoints (using tools like Great Expectations or custom Pandas schema assertions) during the ingestion and staging phases. This catches missing values, duplicate primary keys, and schema drift early, preventing corrupted or malformed data from reaching the data warehouse and breaking dashboards.
+
+
+
+
