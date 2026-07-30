@@ -1,0 +1,48 @@
+Lab 3
+
+Q1 
+In short, Hadoop was created because the internet grew too large for traditional, expensive supercomputers to store and process all the data.
+It solved this by distributing massive datasets across clusters of cheap, everyday computers. It achieved this through two main innovations:
+HDFS: Splitting huge files and scattering them across multiple machines so no single hard drive gets overwhelmed.
+MapReduce: Sending the processing code directly to the machines holding the data, rather than moving petabytes of data across the network to a central processor.
+
+---------
+
+q1
+B
+Q2
+c
+q3
+C
+q4
+3
+q5
+B
+q6
+A
+Q7
+B
+Q8
+C
+Q9
+B
+Q10
+B
+Q11
+B
+Q12
+B
+Q13
+B
+Q14
+B
+Q15
+C
+Q16
+B
+Q17
+A
+Q18
+A
+Q19
+B
