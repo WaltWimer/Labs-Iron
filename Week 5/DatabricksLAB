@@ -1,0 +1,55 @@
+-- 1. List all distinct products sold, along with their total quantity sold.
+SELECT product, SUM(quantity) AS total_quantity 
+FROM sales_transactions 
+GROUP BY product;
+
+-- 2. Find the top 5 franchises by total revenue.
+SELECT franchiseID, SUM(totalPrice) AS total_revenue 
+FROM sales_transactions 
+GROUP BY franchiseID 
+ORDER BY total_revenue DESC 
+LIMIT 5;
+
+-- 3. Count the number of customers per city.
+SELECT city, COUNT(DISTINCT customerID) AS total_customers 
+FROM sales_customers 
+GROUP BY city;
+
+-- 4. Find the average transaction amount per product.
+SELECT product, AVG(totalPrice) AS avg_transaction_amount 
+FROM sales_transactions 
+GROUP BY product;
+
+-- 5. Average fare by hour
+SELECT HOUR(tpep_pickup_datetime), AVG(fare_amount) 
+FROM samples.nyctaxi.trips 
+GROUP BY 1 ORDER BY 1;
+
+-- 7. Busiest routes
+SELECT pickup_zip, dropoff_zip, COUNT(*) 
+FROM samples.nyctaxi.trips 
+GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 10;
+
+-- 8. Flag anomalies (Using IF() to shorten the CASE statement)
+SELECT *, 
+       IF(trip_distance = 0 OR fare_amount/trip_distance > 50, 'Anomaly', 'Normal') AS flag
+FROM samples.nyctaxi.trips;
+
+-- 10. Top zone per day (Using direct QUALIFY without CTE)
+SELECT CAST(tpep_pickup_datetime AS DATE) AS day, pickup_zip, COUNT(*) AS trips
+FROM samples.nyctaxi.trips
+GROUP BY 1, 2
+QUALIFY ROW_NUMBER() OVER (PARTITION BY day ORDER BY trips DESC) = 1;
+
+-- 11. Heatmap by day and hour
+SELECT date_format(tpep_pickup_datetime, 'E'), HOUR(tpep_pickup_datetime), COUNT(*) 
+FROM samples.nyctaxi.trips 
+GROUP BY 1, 2 ORDER BY 1, 2;
+
+-- 12. 7-day rolling average (CTE is unavoidable here due to window syntax)
+WITH daily AS (
+    SELECT CAST(tpep_pickup_datetime AS DATE) as d, SUM(fare_amount) as rev 
+    FROM samples.nyctaxi.trips GROUP BY 1
+)
+SELECT d, rev, AVG(rev) OVER(ORDER BY d ROWS 6 PRECEDING) 
+FROM daily;
