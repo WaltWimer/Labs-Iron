@@ -1,0 +1,177 @@
+LAB 5
+
+Task :
+send images to producer consumer
+send pdf/csv files
+send data from sql(mysql/sqllite/postgres) to localfile/hdfs
+
+
+
+
+
+-------------------------send images to producer consumer------------------------------
+-----for the comsumer .py this is the code
+
+from kafka import KafkaConsumer
+consumer = KafkaConsumer(
+    'images',
+    bootstrap_servers='localhost:9092',
+    auto_offset_reset='earliest'
+)
+for message in consumer:
+    with open('received_image.jpg', 'wb') as file:
+        file.write(message.value)
+    print('Image received successfully')
+    break
+
+
+-----for the  producer.py this was the code
+from kafka import KafkaConsumer
+consumer = KafkaConsumer(
+    'images',
+    bootstrap_servers='localhost:9092',
+    auto_offset_reset='earliest'
+)
+for message in consumer:
+    with open('received_image.jpg', 'wb') as file:
+        file.write(message.value)
+    print('Image received successfully')
+    break
+
+
+then i runned in vm terminal 
+
+kafka-topics --delete --zookeeper localhost:2181 --topic images
+kafka-topics --create --zookeeper localhost:2181 --topic images --replication-factor 1 --partitions 1
+python3.6 image_producer.py
+python3.6 image_consumer.py
+
+----------------------------------------------------------------------------------------------------
+
+
+send pdf/csv files
+pretty much i reused last srcitps but modded for the csv and pdf
+
+kafka-topics --create --zookeeper localhost:2181 --topic pdf-topic --replication-factor 1 --partitions 1                  
+kafka-topics --create --zookeeper localhost:2181 --topic csv-topic --replication-factor 1 --partitions 1
+
+
+
+---------PHYTON PRODUCERS
+
+from kafka import KafkaProducer
+
+producer = KafkaProducer(bootstrap_servers='localhost:9092')
+filename = '/home/training/Documents/A4document.pdf'
+
+with open(filename, 'rb') as file:
+    file_data = file.read()
+
+producer.send('pdf-topic', value=file_data)
+producer.flush()
+print('PDF sent successfully')
+
+
+from kafka import KafkaProducer
+
+producer = KafkaProducer(bootstrap_servers='localhost:9092')
+filename = '/home/training/Documents/orders.csv'
+
+with open(filename, 'rb') as file:
+    file_data = file.read()
+
+producer.send('csv-topic', value=file_data)
+producer.flush()
+print('CSV sent successfully')
+
+
+
+---------CONSUMER SCRIPTS
+
+from kafka import KafkaConsumer
+
+consumer = KafkaConsumer(
+    'pdf-topic',
+    bootstrap_servers='localhost:9092',
+    auto_offset_reset='earliest',
+    enable_auto_commit=True
+)
+
+for message in consumer:
+    with open('/home/training/Desktop/received_document.pdf', 'wb') as file:
+        file.write(message.value)
+    print('PDF received and saved successfully')
+    break
+
+
+from kafka import KafkaConsumer
+
+consumer = KafkaConsumer(
+    'csv-topic',
+    bootstrap_servers='localhost:9092',
+    auto_offset_reset='earliest',
+    enable_auto_commit=True
+)
+
+for message in consumer:
+    with open('/home/training/Desktop/received_orders.csv', 'wb') as file:
+        file.write(message.value)
+    print('CSV received and saved successfully')
+    break
+
+
+then we run both with phyton 3.6 
+
+
+
+---------lastly for the sql
+
+first i create a database
+
+CREATE DATABASE marvel_db;
+USE marvel_db;
+
+CREATE TABLE characters (
+    character_name VARCHAR(50),
+    role VARCHAR(50),
+    health INT,
+    difficulty VARCHAR(50),
+    ultimate_ability VARCHAR(100)
+);
+
+INSERT INTO characters VALUES
+('Iron Man', 'Duelist', 250, 'Medium', 'Invincible Iron Man'),
+('Spider-Man', 'Duelist', 250, 'Hard', 'Spectacular Spin'),
+('Groot', 'Vanguard', 700, 'Easy', 'Strangling Vines'),
+('Rocket Raccoon', 'Strategist', 200, 'Medium', 'C.Y.A.'),
+('Hulk', 'Vanguard', 800, 'Medium', 'Hulk Smash'),
+('Luna Snow', 'Strategist', 200, 'Hard', 'Fate of Both Worlds');
+
+
+
+then had to leave safe hdfs mode to be able to run producer and consumer (both pys in the folder)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
