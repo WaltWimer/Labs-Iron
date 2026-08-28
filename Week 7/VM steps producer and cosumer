@@ -1,0 +1,20 @@
+Kafka Producer and Consumer Terminal Setup Guide
+
+Prerequisite:
+Ensure that ZooKeeper and the Kafka broker are running in the background of your virtual machine.
+
+Step 1: Open the first terminal for the Producer
+- Open terminal window number one.
+- Run the following command to start the Kafka console producer, pointing it to the local broker and specifying the topic name:
+  kafka-console-producer --broker-list localhost:9092 --topic ironhack
+- Press Enter to see the `>` prompt waiting for text input.
+
+Step 2: Open the second terminal for the Consumer
+- Open a second, separate terminal window.
+- Run the following command to start the Kafka console consumer, connecting it to ZooKeeper, targeting the same topic, and using `--from-beginning` to catch all messages:
+  kafka-console-consumer --zookeeper localhost:2181 --topic ironhack --from-beginning
+- Press Enter.
+
+Step 3: Test the Communication
+- Click back into your Producer terminal and type messages (e.g., hello, this is a producer), pressing Enter after each.
+- View the Consumer terminal on the right to see the messages appear in real time.
