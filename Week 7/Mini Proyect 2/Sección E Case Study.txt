@@ -1,0 +1,8 @@
+Q1. Why use dbt for data transformation instead of writing raw SQL scripts?
+Using raw SQL scripts leads to monolithic code that is hard to maintain. dbt introduces modularity, allowing engineers to break logic into reusable components (staging, marts). It provides built-in version control integration, automated dependency tracking via DAGs, and out-of-the-box data testing capabilities.
+
+Q2. What are the benefits of using Apache Airflow over a simple cron job?
+A cron job is a blind, time-based scheduler with no state awareness. Airflow manages complex task dependencies, ensuring downstream tasks only run if upstream tasks succeed. It natively handles retries upon failure, triggers alerts, and provides a UI to trace execution logs across the pipeline.
+
+Q3. How would you ensure data quality in this pipeline?
+Quality is enforced at multiple layers. In the transformation layer, dbt tests defined in schema.yml assert that critical columns (like dates or IDs) remain unique and non-null. In the orchestration layer, Airflow tasks (like a SnowflakeOperator) act as data sensors to validate that fresh records are successfully loaded before concluding the daily run.
