@@ -1,0 +1,9 @@
+version: 2
+
+models:
+  - name: mart_daily_revenue
+    columns:
+      - name: sale_date
+        tests:
+          - unique
+          - not_null
